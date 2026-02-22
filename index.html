@@ -1022,47 +1022,39 @@
   }
 
   // ─── CLAUDE API ─────────────────────────────────────────────────
-  async function callClaudeAPI(labText) {
-    // NOTE: For production, this call should go through your own backend
-    // to keep the API key secure. For now this demonstrates the structure.
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+async function callClaudeAPI(labText) {
+    const response = await fetch('/api/analyze', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-6',
-        max_tokens: 1500,
-        messages: [{
-          role: 'user',
-          content: `You are LabPlain, a patient-friendly lab result interpreter. A patient has shared their lab results below.
-
-Your job:
-1. Explain each value in plain English (what it measures, what their result means)
-2. Note if any value is outside the normal range (use simple language like "slightly elevated" or "within normal range")
-3. End with 3-5 suggested questions the patient could ask their doctor
-
-Important rules:
-- Do NOT diagnose any condition
-- Do NOT recommend any medication or treatment
-- Keep language warm, clear, and reassuring
-- Use simple English — no medical jargon without explanation
-- Format with clear sections
-
-Lab results:
-${labText}`
-        }]
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: labText })
     });
 
     if (!response.ok) {
-      throw new Error('API call failed: ' + response.status);
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'API call failed: ' + response.status);
     }
 
     const data = await response.json();
-    return data.content[0].text;
+
+    // Format the structured JSON into readable text
+    let output = data.summary + '\n\n';
+    if (data.results?.length) {
+      data.results.forEach(r => {
+        output += `📊 ${r.test}: ${r.value} (${r.status})\n`;
+        output += `${r.plain_english}\n\n`;
+      });
+    }
+    if (data.red_flags?.length) {
+      output += '⚠️ Things to follow up on:\n';
+      data.red_flags.forEach(f => output += `• ${f}\n`);
+      output += '\n';
+    }
+    if (data.questions_for_doctor?.length) {
+      output += '💬 Questions to ask your doctor:\n';
+      data.questions_for_doctor.forEach(q => output += `• ${q}\n`);
+    }
+
+    return output;
   }
 
   // ─── SAVE REPORT TO SUPABASE ─────────────────────────────────────
