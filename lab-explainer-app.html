@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LabPlain — Understand Your Lab Results</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F7F3EE;
+    --warm-white: #FDFAF6;
+    --deep-teal: #0D3D3A;
+    --mid-teal: #1A6B65;
+    --accent: #E8854A;
+    --accent-light: #FDF0E8;
+    --text: #1C1C1C;
+    --text-muted: #6B7280;
+    --border: #E5DDD4;
+    --success: #2D7D5F;
+    --warning: #C4622D;
+    --card-bg: #FFFFFF;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--deep-teal);
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--cream);
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .badge {
+    background: rgba(255,255,255,0.1);
+    color: var(--cream);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* HERO */
+  .hero {
+    background: var(--deep-teal);
+    padding: 60px 40px 80px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(232,133,74,0.12) 0%, transparent 70%);
+    top: -200px; right: -100px;
+    pointer-events: none;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    color: var(--cream);
+    line-height: 1.15;
+    max-width: 640px;
+    margin: 0 auto 16px;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero p {
+    color: rgba(247,243,238,0.7);
+    font-size: 17px;
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto 36px;
+    line-height: 1.6;
+  }
+
+  .hero-pills {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(247,243,238,0.85);
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 400;
+  }
+
+  /* MAIN CONTAINER */
+  .container {
+    max-width: 860px;
+    margin: -32px auto 60px;
+    padding: 0 20px;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* INPUT CARD */
+  .input-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: 0 8px 48px rgba(13,61,58,0.12);
+    overflow: hidden;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--warm-white);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 18px 12px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border: none;
+    background: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-bottom: 2px solid transparent;
+  }
+
+  .tab:hover { color: var(--mid-teal); }
+
+  .tab.active {
+    color: var(--deep-teal);
+    border-bottom: 2px solid var(--accent);
+    background: var(--card-bg);
+    font-weight: 600;
+  }
+
+  .tab-icon { font-size: 16px; }
+
+  /* TAB PANELS */
+  .tab-panel { display: none; padding: 32px; }
+  .tab-panel.active { display: block; }
+
+  /* TEXT INPUT */
+  .input-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--deep-teal);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 200px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    resize: vertical;
+    background: var(--warm-white);
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--mid-teal);
+    background: #fff;
+  }
+
+  textarea::placeholder { color: #B0A898; }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--warm-white);
+    position: relative;
+  }
+
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--mid-teal);
+    background: #F0F7F6;
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+
+  .upload-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--deep-teal);
+    margin-bottom: 6px;
+  }
+
+  .upload-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .upload-preview {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--accent-light);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ANALYZE BUTTON */
+  .analyze-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--deep-teal);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    letter-spacing: 0.2px;
+  }
+
+  .analyze-btn:hover { background: var(--mid-teal); transform: translateY(-1px); }
+  .analyze-btn:disabled { background: #9CA3AF; cursor: not-allowed; transform: none; }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 48px 32px;
+  }
+
+  .loading.active { display: block; }
+
+  .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--mid-teal);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading p {
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  .loading-steps {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 260px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .loading-step {
+    font-size: 12px;
+    color: var(--text-muted);
+    opacity: 0;
+    animation: fadeInStep 0.5s forwards;
+  }
+
+  .loading-step:nth-child(1) { animation-delay: 0.5s; }
+  .loading-step:nth-child(2) { animation-delay: 1.5s; }
+  .loading-step:nth-child(3) { animation-delay: 2.5s; }
+
+  @keyframes fadeInStep { to { opacity: 1; } }
+
+  /* RESULTS */
+  .results { display: none; }
+  .results.active { display: block; }
+
+  .results-header {
+    background: var(--deep-teal);
+    padding: 28px 32px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .results-header::after {
+    content: '🔬';
+    position: absolute;
+    right: 28px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 48px;
+    opacity: 0.2;
+  }
+
+  .results-header h2 {
+    font-family: 'DM Serif Display', serif;
+    color: var(--cream);
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+
+  .results-header p {
+    color: rgba(247,243,238,0.65);
+    font-size: 13px;
+  }
+
+  /* RESULT SECTIONS */
+  .result-section {
+    background: var(--card-bg);
+    border-radius: 14px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+
+  .result-section-header {
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .result-section-header:hover { background: var(--warm-white); }
+
+  .section-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .icon-summary { background: #EFF6FF; }
+  .icon-tests { background: #F0FDF4; }
+  .icon-causes { background: #FFF7ED; }
+  .icon-questions { background: #FDF4FF; }
+  .icon-redflags { background: #FEF2F2; }
+
+  .section-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--deep-teal);
+    flex: 1;
+  }
+
+  .section-chevron {
+    color: var(--text-muted);
+    font-size: 18px;
+    transition: transform 0.2s;
+  }
+
+  .result-section.open .section-chevron { transform: rotate(180deg); }
+
+  .result-section-body {
+    display: none;
+    padding: 4px 22px 22px;
+    border-top: 1px solid var(--border);
+  }
+
+  .result-section.open .result-section-body { display: block; }
+
+  /* CONTENT STYLES */
+  .summary-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+    padding-top: 16px;
+  }
+
+  .test-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .test-item:last-child { border-bottom: none; }
+
+  .test-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--deep-teal);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 6px;
+  }
+
+  .test-status {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+
+  .status-normal { background: #D1FAE5; color: #065F46; }
+  .status-high { background: #FEE2E2; color: #991B1B; }
+  .status-low { background: #FEF3C7; color: #92400E; }
+  .status-borderline { background: #FEF3C7; color: #92400E; }
+
+  .test-explanation {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #4B5563;
+  }
+
+  .cause-item, .question-item {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #4B5563;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cause-item:last-child, .question-item:last-child { border-bottom: none; }
+
+  .cause-bullet {
+    width: 20px; height: 20px;
+    background: var(--accent-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .redflag-item {
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #FEF2F2;
+    border-radius: 10px;
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #7F1D1D;
+    border-left: 3px solid #EF4444;
+  }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    background: var(--accent-light);
+    border: 1px solid #F5C9A5;
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .disclaimer-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
+  .disclaimer-text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: #7C4A1E;
+  }
+
+  .disclaimer-text strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: #5C3010;
+  }
+
+  /* NEW ANALYSIS BUTTON */
+  .new-analysis-btn {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: var(--deep-teal);
+    border: 2px solid var(--deep-teal);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s;
+  }
+
+  .new-analysis-btn:hover { background: var(--deep-teal); color: white; }
+
+  /* HOW IT WORKS */
+  .how-it-works {
+    margin-top: 48px;
+    text-align: center;
+  }
+
+  .how-it-works h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--deep-teal);
+    margin-bottom: 8px;
+  }
+
+  .how-it-works p {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 36px;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+
+  .step-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px 22px;
+    text-align: left;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+
+  .step-num {
+    width: 36px; height: 36px;
+    background: var(--deep-teal);
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+
+  .step-card h4 {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--deep-teal);
+    margin-bottom: 6px;
+  }
+
+  .step-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ERROR */
+  .error-box {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 12px;
+    padding: 16px 20px;
+    color: #991B1B;
+    font-size: 14px;
+    margin-top: 16px;
+    display: none;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.8;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 16px 20px; }
+    .hero { padding: 40px 20px 60px; }
+    .tab-panel { padding: 22px; }
+    .results-header { padding: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Lab<span>Plain</span></div>
+  <span class="badge">Beta — Not Medical Advice</span>
+</header>
+
+<div class="hero">
+  <h1>Understand your lab results <em>in plain English</em></h1>
+  <p>Paste, upload, or photograph your results. We translate the medical language so you can have a better conversation with your doctor.</p>
+  <div class="hero-pills">
+    <span class="pill">✓ No diagnosis</span>
+    <span class="pill">✓ No medication advice</span>
+    <span class="pill">✓ AI-powered plain English</span>
+    <span class="pill">✓ Questions to ask your doctor</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- INPUT CARD -->
+  <div class="input-card" id="inputCard">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('type')" id="tab-type">
+        <span class="tab-icon">⌨️</span> Type Results
+      </button>
+      <button class="tab" onclick="switchTab('upload')" id="tab-upload">
+        <span class="tab-icon">📄</span> Upload PDF
+      </button>
+      <button class="tab" onclick="switchTab('photo')" id="tab-photo">
+        <span class="tab-icon">📷</span> Upload Photo
+      </button>
+    </div>
+
+    <!-- TYPE PANEL -->
+    <div class="tab-panel active" id="panel-type">
+      <div class="input-label">Paste or type your lab results</div>
+      <textarea id="labText" placeholder="Example:
+Glucose: 110 mg/dL (Reference: 70-99)
+HbA1c: 5.9% (Reference: Below 5.7%)
+Total Cholesterol: 215 mg/dL (Reference: Below 200)
+LDL: 138 mg/dL (Reference: Below 100)
+HDL: 52 mg/dL (Reference: Above 40)
+Triglycerides: 180 mg/dL (Reference: Below 150)"></textarea>
+      <div class="error-box" id="typeError">Please enter your lab results before analyzing.</div>
+      <button class="analyze-btn" onclick="analyzeResults('type')">
+        🔬 Analyze My Results
+      </button>
+    </div>
+
+    <!-- PDF PANEL -->
+    <div class="tab-panel" id="panel-upload">
+      <div class="input-label">Upload your lab report PDF</div>
+      <div class="upload-zone" id="pdfZone">
+        <input type="file" accept=".pdf" id="pdfInput" onchange="handlePDFUpload(event)">
+        <div class="upload-icon">📋</div>
+        <div class="upload-title">Drop your PDF here or click to browse</div>
+        <div class="upload-sub">Supports standard lab report PDFs</div>
+        <div class="upload-preview" id="pdfPreview">
+          <span>📎</span>
+          <span id="pdfFileName"></span>
+        </div>
+      </div>
+      <div class="error-box" id="pdfError">Please upload a PDF file first.</div>
+      <button class="analyze-btn" onclick="analyzeResults('pdf')">
+        🔬 Analyze PDF Results
+      </button>
+    </div>
+
+    <!-- PHOTO PANEL -->
+    <div class="tab-panel" id="panel-photo">
+      <div class="input-label">Upload a photo of your lab report</div>
+      <div class="upload-zone" id="photoZone">
+        <input type="file" accept="image/*" id="photoInput" onchange="handlePhotoUpload(event)">
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-title">Drop your photo here or click to browse</div>
+        <div class="upload-sub">JPG, PNG, HEIC supported — make sure text is clear</div>
+        <div class="upload-preview" id="photoPreview">
+          <span>🖼️</span>
+          <span id="photoFileName"></span>
+        </div>
+      </div>
+      <div class="error-box" id="photoError">Please upload a photo first.</div>
+      <button class="analyze-btn" onclick="analyzeResults('photo')">
+        🔬 Analyze Photo Results
+      </button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Analyzing your lab results...</p>
+    <div class="loading-steps">
+      <div class="loading-step">✓ Reading your values...</div>
+      <div class="loading-step">✓ Translating medical language...</div>
+      <div class="loading-step">✓ Preparing your summary...</div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <h2>Your Lab Results — Explained</h2>
+      <p>Plain English summary ready. Always follow up with your doctor.</p>
+    </div>
+    <div id="resultsContent"></div>
+    <div class="disclaimer">
+      <span class="disclaimer-icon">⚠️</span>
+      <div class="disclaimer-text">
+        <strong>Important Disclaimer</strong>
+        This explanation is for informational purposes only. LabPlain does not diagnose conditions, recommend medications, or provide treatment plans. Always consult your doctor or healthcare provider about your results. If you are experiencing severe symptoms, seek medical attention immediately.
+      </div>
+    </div>
+    <button class="new-analysis-btn" onclick="resetApp()">← Analyze Another Report</button>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="how-it-works" id="howItWorks">
+    <h3>How LabPlain works</h3>
+    <p>Three simple steps to understand your health data</p>
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h4>Input your results</h4>
+        <p>Type, upload a PDF, or photograph your lab report — any format works.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h4>AI translates it</h4>
+        <p>Our AI reads every value and explains what it means in plain, simple language.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h4>Talk to your doctor</h4>
+        <p>Use your personalized summary and questions to have a better conversation with your clinician.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  LabPlain is not a medical device and does not provide medical advice, diagnosis, or treatment.<br>
+  Always consult a qualified healthcare professional with questions about your health.<br>
+  © 2026 LabPlain — Built with care for patients everywhere.
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  let pdfFile = null;
+  let photoFile = null;
+  let currentTab = 'type';
+
+  // Tab switching
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    hideErrors();
+  }
+
+  function hideErrors() {
+    document.querySelectorAll('.error-box').forEach(e => e.style.display = 'none');
+  }
+
+  // PDF upload
+  function handlePDFUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    pdfFile = file;
+    document.getElementById('pdfFileName').textContent = file.name;
+    document.getElementById('pdfPreview').style.display = 'flex';
+  }
+
+  // Photo upload
+  function handlePhotoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    photoFile = file;
+    document.getElementById('photoFileName').textContent = file.name;
+    document.getElementById('photoPreview').style.display = 'flex';
+  }
+
+  // Extract text from PDF
+  async function extractPDFText(file) {
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(item => item.str).join(' ') + '\n';
+    }
+    return text;
+  }
+
+  // Convert image to base64
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Main analyze function
+  async function analyzeResults(type) {
+    hideErrors();
+    let labContent = '';
+    let messages = [];
+
+    if (type === 'type') {
+      labContent = document.getElementById('labText').value.trim();
+      if (!labContent) {
+        document.getElementById('typeError').style.display = 'block';
+        return;
+      }
+      messages = [{ role: 'user', content: `Here are my lab results:\n\n${labContent}` }];
+    }
+
+    else if (type === 'pdf') {
+      if (!pdfFile) {
+        document.getElementById('pdfError').style.display = 'block';
+        return;
+      }
+      try {
+        labContent = await extractPDFText(pdfFile);
+        messages = [{ role: 'user', content: `Here are my lab results extracted from a PDF:\n\n${labContent}` }];
+      } catch(e) {
+        document.getElementById('pdfError').textContent = 'Could not read PDF. Please try copying and pasting the text instead.';
+        document.getElementById('pdfError').style.display = 'block';
+        return;
+      }
+    }
+
+    else if (type === 'photo') {
+      if (!photoFile) {
+        document.getElementById('photoError').style.display = 'block';
+        return;
+      }
+      try {
+        const base64 = await fileToBase64(photoFile);
+        const mediaType = photoFile.type || 'image/jpeg';
+        messages = [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+            { type: 'text', text: 'Here is a photo of my lab results. Please analyze them.' }
+          ]
+        }];
+      } catch(e) {
+        document.getElementById('photoError').textContent = 'Could not process image. Please try a different photo.';
+        document.getElementById('photoError').style.display = 'block';
+        return;
+      }
+    }
+
+    // Show loading
+    document.getElementById('inputCard').style.display = 'none';
+    document.getElementById('howItWorks').style.display = 'none';
+    document.getElementById('loading').classList.add('active');
+    document.getElementById('results').classList.remove('active');
+
+    const systemPrompt = `You are LabPlain, a patient-friendly lab result explainer. Your job is to translate lab results into plain English that anyone can understand.
+
+STRICT RULES:
+- Do NOT diagnose any condition
+- Do NOT recommend any medication
+- Do NOT provide treatment plans
+- Always advise patients to consult their clinician
+- Use calm, non-alarming tone
+- Write at an 8th grade reading level
+- Be warm, clear, and reassuring
+
+You must respond ONLY with a valid JSON object in this exact structure:
+{
+  "summary": "A 2-3 sentence plain English overview of the results overall. Be calm and clear.",
+  "tests": [
+    {
+      "name": "Test name",
+      "value": "The actual value from results",
+      "status": "normal|high|low|borderline",
+      "explanation": "Plain English explanation of what this test measures and what the result means. 2-3 sentences max."
+    }
+  ],
+  "common_causes": [
+    "Non-diagnostic common cause or factor 1",
+    "Non-diagnostic common cause or factor 2",
+    "Non-diagnostic common cause or factor 3"
+  ],
+  "questions_for_doctor": [
+    "Specific question to ask doctor 1",
+    "Specific question to ask doctor 2",
+    "Specific question to ask doctor 3",
+    "Specific question to ask doctor 4"
+  ],
+  "red_flags": [
+    "Symptom or situation that means seek care soon — only include if genuinely warranted"
+  ]
+}
+
+If no red flags exist, return an empty array for red_flags.
+Respond ONLY with the JSON. No preamble. No markdown. No explanation outside the JSON.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: messages
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content.map(i => i.text || '').join('');
+      const clean = text.replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(clean);
+      renderResults(parsed);
+
+    } catch (err) {
+      document.getElementById('loading').classList.remove('active');
+      document.getElementById('inputCard').style.display = 'block';
+      document.getElementById('howItWorks').style.display = 'block';
+      const errBox = document.getElementById('typeError');
+      errBox.textContent = 'Something went wrong. Please check your results and try again.';
+      errBox.style.display = 'block';
+    }
+  }
+
+  function renderResults(data) {
+    document.getElementById('loading').classList.remove('active');
+
+    let html = '';
+
+    // SUMMARY
+    html += `
+    <div class="result-section open" onclick="toggleSection(this)">
+      <div class="result-section-header">
+        <div class="section-icon icon-summary">📋</div>
+        <span class="section-title">Overall Summary</span>
+        <span class="section-chevron">⌄</span>
+      </div>
+      <div class="result-section-body">
+        <p class="summary-text">${data.summary}</p>
+      </div>
+    </div>`;
+
+    // TESTS
+    if (data.tests && data.tests.length > 0) {
+      let testsHTML = data.tests.map(t => {
+        const statusClass = `status-${t.status}`;
+        const statusLabel = t.status.charAt(0).toUpperCase() + t.status.slice(1);
+        return `
+        <div class="test-item">
+          <div class="test-name">
+            ${t.name}
+            <span class="test-status ${statusClass}">${statusLabel}</span>
+          </div>
+          <div class="test-explanation"><strong>Your value: ${t.value}</strong> — ${t.explanation}</div>
+        </div>`;
+      }).join('');
+
+      html += `
+      <div class="result-section open" onclick="toggleSection(this)">
+        <div class="result-section-header">
+          <div class="section-icon icon-tests">🧪</div>
+          <span class="section-title">Your Tests Explained (${data.tests.length})</span>
+          <span class="section-chevron">⌄</span>
+        </div>
+        <div class="result-section-body">${testsHTML}</div>
+      </div>`;
+    }
+
+    // COMMON CAUSES
+    if (data.common_causes && data.common_causes.length > 0) {
+      let causesHTML = data.common_causes.map((c, i) => `
+        <div class="cause-item">
+          <div class="cause-bullet">${i + 1}</div>
+          <span>${c}</span>
+        </div>`).join('');
+
+      html += `
+      <div class="result-section" onclick="toggleSection(this)">
+        <div class="result-section-header">
+          <div class="section-icon icon-causes">💡</div>
+          <span class="section-title">Common Factors (Not a Diagnosis)</span>
+          <span class="section-chevron">⌄</span>
+        </div>
+        <div class="result-section-body" style="padding-top:12px">${causesHTML}</div>
+      </div>`;
+    }
+
+    // QUESTIONS FOR DOCTOR
+    if (data.questions_for_doctor && data.questions_for_doctor.length > 0) {
+      let questionsHTML = data.questions_for_doctor.map(q => `
+        <div class="question-item">
+          <div class="cause-bullet">?</div>
+          <span>${q}</span>
+        </div>`).join('');
+
+      html += `
+      <div class="result-section" onclick="toggleSection(this)">
+        <div class="result-section-header">
+          <div class="section-icon icon-questions">🩺</div>
+          <span class="section-title">Questions to Ask Your Doctor</span>
+          <span class="section-chevron">⌄</span>
+        </div>
+        <div class="result-section-body" style="padding-top:12px">${questionsHTML}</div>
+      </div>`;
+    }
+
+    // RED FLAGS
+    if (data.red_flags && data.red_flags.length > 0) {
+      let flagsHTML = data.red_flags.map(f => `
+        <div class="redflag-item">
+          <span>🚨</span>
+          <span>${f}</span>
+        </div>`).join('');
+
+      html += `
+      <div class="result-section" onclick="toggleSection(this)">
+        <div class="result-section-header">
+          <div class="section-icon icon-redflags">🚨</div>
+          <span class="section-title">When to Seek Care Sooner</span>
+          <span class="section-chevron">⌄</span>
+        </div>
+        <div class="result-section-body" style="padding-top:12px">${flagsHTML}</div>
+      </div>`;
+    }
+
+    document.getElementById('resultsContent').innerHTML = html;
+    document.getElementById('results').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleSection(el) {
+    el.classList.toggle('open');
+  }
+
+  function resetApp() {
+    document.getElementById('results').classList.remove('active');
+    document.getElementById('inputCard').style.display = 'block';
+    document.getElementById('howItWorks').style.display = 'block';
+    document.getElementById('labText').value = '';
+    pdfFile = null;
+    photoFile = null;
+    document.getElementById('pdfPreview').style.display = 'none';
+    document.getElementById('photoPreview').style.display = 'none';
+    hideErrors();
+    switchTab('type');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Drag and drop
+  ['pdfZone', 'photoZone'].forEach(id => {
+    const zone = document.getElementById(id);
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      if (id === 'pdfZone') {
+        pdfFile = file;
+        document.getElementById('pdfFileName').textContent = file.name;
+        document.getElementById('pdfPreview').style.display = 'flex';
+      } else {
+        photoFile = file;
+        document.getElementById('photoFileName').textContent = file.name;
+        document.getElementById('photoPreview').style.display = 'flex';
+      }
+    });
+  });
+</script>
+</body>
+</html>
