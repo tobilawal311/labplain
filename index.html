@@ -1052,7 +1052,7 @@
       data.questions_for_doctor.forEach(function(q) { out.push('- ' + q); });
     }
     if (data.disclaimer) out.push(data.disclaimer);
-    return out.join('
+    return out.join('\n\n') || JSON.stringify(data);
 
 ') || JSON.stringify(data);
   }
