@@ -9,44 +9,50 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing text" });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: "Missing OPENAI_API_KEY in Vercel env" });
+      return res.status(500).json({ error: "Missing ANTHROPIC_API_KEY" });
     }
 
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: 0.2,
+        model: "claude-3-haiku-20240307",
+        max_tokens: 800,
         messages: [
           {
-            role: "system",
-            content:
-              "You explain medical lab results in plain English. No diagnosis. No medication advice. No treatment plans. Use short sections: Summary, What stands out, What it can mean (non-diagnostic), Questions to ask your doctor. Keep it clear and calm."
-          },
-          {
             role: "user",
-            content: text
+            content: `Explain these medical lab results in plain English. 
+No diagnosis. No medication advice. 
+Use sections:
+Summary
+What stands out
+What it can mean (non-diagnostic)
+Questions to ask your doctor
+
+Lab results:
+${text}`
           }
         ]
       })
     });
 
-    const data = await r.json();
+    const data = await response.json();
 
-    if (!r.ok) {
-      return res.status(r.status).json({ error: "OpenAI request failed", details: data });
+    if (!response.ok) {
+      return res.status(response.status).json({ error: data });
     }
 
-    const output = data?.choices?.[0]?.message?.content || "";
+    const output = data.content?.[0]?.text || "No response.";
+
     return res.status(200).json({ output });
 
-  } catch (e) {
-    return res.status(500).json({ error: String(e) });
+  } catch (error) {
+    return res.status(500).json({ error: String(error) });
   }
 }
