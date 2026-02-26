@@ -273,7 +273,7 @@
 </footer>
 
 <script>
-var SUPABASE_URL = 'https://cckooenhxpydctzdjojq.supabase.co';
+var SUPABASE_URL = 'https://ckcooenhxypdctzdjoqj.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNja29vZW5oeHB5ZGN0emRqb2pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3ODA4ODUsImV4cCI6MjA4NzM1Njg4NX0.XghPHq3nMUBNPGt9_O4Ipm-NMsmwTnchlvCYWRBm33I';
 var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 var currentUser = null;
@@ -472,7 +472,7 @@ async function analyze(type) {
   animateLoadingSteps();
   try {
     var aiOutput = await callAPI(payload);
-    await saveReport(type, aiOutput);
+    await saveReport(type, payload, aiOutput);
     showResults(aiOutput);
     if (!currentUser) {
       localStorage.setItem('guestUsage', String(parseInt(localStorage.getItem('guestUsage') || '0') + 1));
@@ -489,18 +489,39 @@ async function callAPI(payload) {
   var response = await fetch('/api/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    cache: 'no-store'
   });
-  if (!response.ok) {
-    throw new Error('API call failed: ' + response.status);
+
+  var data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    var raw = await response.text();
+    throw new Error('API returned non-JSON: ' + response.status + ' ' + raw);
   }
-  var data = await response.json();
-  return data.result || data.raw || JSON.stringify(data);
+
+  if (!response.ok) {
+    throw new Error('API call failed: ' + response.status + ' ' + JSON.stringify(data));
+  }
+
+  // Backend returns: { result: "..." } OR { output: "..." }
+  return data.result || data.output || '';
 }
 
-async function saveReport(inputText, aiOutput) {
+async function saveReport(inputType, payload, aiOutput) {
   if (!currentUser) return;
-  await db.from('reports').insert({ user_id: currentUser.id, input_text: inputText, ai_output: aiOutput, is_flagged: false });
+
+  var inputText = '';
+  if (inputType === 'text') inputText = payload.text || '';
+  if (inputType === 'pdf' || inputType === 'photo') inputText = payload.fileName || inputType;
+
+  await db.from('reports').insert({
+    user_id: currentUser.id,
+    input_text: inputText,
+    ai_output: aiOutput,
+    is_flagged: false
+  });
 }
 
 function showLoading() {
