@@ -1,53 +1,72 @@
-module.exports = async (req, res) => {
-  try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "Use POST" });
-    }
+// api/analyze.js  (CommonJS - safest on Vercel)
 
-    const { text } = req.body || {};
+module.exports = async (req, res) => {
+  // Allow only POST
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Use POST" });
+  }
+
+  try {
+    const body = req.body || {};
+    const text = body.text;
+
+    // Basic validation (your UI sends { text } for "Type Results")
     if (!text || typeof text !== "string") {
       return res.status(400).json({ error: "Missing text" });
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: "Missing ANTHROPIC_API_KEY" });
+      return res.status(500).json({ error: "Missing ANTHROPIC_API_KEY in Vercel env vars" });
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    // Use a REAL model id (avoid "-latest" to stop the 404)
+    const model = "claude-3-5-sonnet-20241022";
+
+    const systemPrompt =
+      "You are LabPlain. Explain lab results in plain English.\n" +
+      "Rules:\n" +
+      "- No diagnosis.\n" +
+      "- No medication advice.\n" +
+      "- Explain what each value generally means and common non-medical next steps.\n" +
+      "- Suggest questions to ask a doctor.\n" +
+      "- Be calm and clear.\n";
+
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "content-type": "application/json",
         "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-latest",
-        max_tokens: 600,
-        temperature: 0.2,
-        messages: [
-          {
-            role: "user",
-            content: `Explain these lab results in plain English:
-
-${text}`
-          }
-        ]
-      })
+        model,
+        max_tokens: 700,
+        system: systemPrompt,
+        messages: [{ role: "user", content: text }],
+      }),
     });
 
-    const data = await response.json();
+    const data = await r.json();
 
-    if (!response.ok) {
-      return res.status(response.status).json({ error: data });
+    // If Anthropic returns an error, show it clearly
+    if (!r.ok) {
+      return res.status(500).json({
+        error: "Anthropic API error",
+        status: r.status,
+        details: data,
+      });
     }
 
-    const output =
-      data?.content?.map(c => c.text).join("\n\n") || "No response.";
+    const resultText =
+      (data.content && data.content[0] && data.content[0].text) ||
+      "No response text returned.";
 
-    return res.status(200).json({ result: output });
-
-  } catch (error) {
-    return res.status(500).json({ error: String(error) });
+    return res.status(200).json({ result: resultText });
+  } catch (err) {
+    return res.status(500).json({
+      error: "Server crashed",
+      message: err?.message || String(err),
+    });
   }
 };
